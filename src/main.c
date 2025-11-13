@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUFFER_SIZE 128
+
 void handle_cmd(char *cmd) {
   char *token = strtok(cmd, " ");
+  // printf("token='%s'\n", token);
   if (strcmp(token, "exit") == 0) {
     token = strtok(NULL, " ");
     if (token[0] == '0')
@@ -18,13 +21,14 @@ void handle_cmd(char *cmd) {
 int main(int argc, char *argv[]) {
   // Flush after every printf
   setbuf(stdout, NULL);
-  char buffer[128];
 
   while (1) {
     printf("$ ");
-    scanf("%[^\n]s", buffer);
-    handle_cmd(buffer);
-    memset(buffer, '\0', 128);
+    size_t len = 0;
+    char *line = NULL;
+    ssize_t bytes_read = getline(&line, &len, stdin);
+    line[bytes_read - 1] = '\0';
+    handle_cmd(line);
   }
 
   return 0;
