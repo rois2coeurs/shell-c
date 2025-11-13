@@ -3,6 +3,8 @@
 #include <string.h>
 
 #define BUFFER_SIZE 128
+#define BUILT_IN_CMD {"echo", "type", "exit"}
+#define BUILD_IN_CMD_LEN 3
 
 void exit_cmd(char *exit_status) {
   if (exit_status[0] == '0')
@@ -12,6 +14,17 @@ void exit_cmd(char *exit_status) {
 }
 
 void echo_cmd(char *message) { printf("%s\n", message); }
+
+void type_cmd(char *cmd) {
+    char  *arr[] = BUILT_IN_CMD;
+    for (int i = 0; i < BUILD_IN_CMD_LEN; i++) {
+        if (strcmp(cmd, arr[i]) == 0) {
+            printf("%s is a shell builtin\n", arr[i]);
+            return;
+        }
+    }
+    printf("%s: not found\n", cmd);
+}
 
 void handle_cmd(char *cmd, int cmd_len) {
   char cmd_cpy[cmd_len];
@@ -26,6 +39,10 @@ void handle_cmd(char *cmd, int cmd_len) {
   if (strcmp(token, "echo") == 0) {
     echo_cmd(cmd + 5);
     return;
+  }
+  if (strcmp(token, "type") == 0) {
+      type_cmd(cmd + 5);
+      return;
   }
 
   printf("%s: command not found\n", cmd);
