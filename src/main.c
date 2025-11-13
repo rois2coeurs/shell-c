@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,8 +10,8 @@
 
 #define BUFFER_SIZE 128
 #define BUILT_IN_CMD                                                           \
-  { "echo", "type", "exit" }
-#define BUILD_IN_CMD_LEN 3
+  { "echo", "type", "exit", "pwd" }
+#define BUILD_IN_CMD_LEN 4
 
 int is_in_path(char *cmd, char *res_path) {
   char *raw_paths = getenv("PATH");
@@ -71,6 +72,13 @@ void type_cmd(char *cmd) {
   printf("%s: not found\n", cmd);
 }
 
+void pwd_cmd() {
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("%s\n", cwd);
+    }
+}
+
 void execute_external_file(char *executable_name, char *exe_path,
                            char *raw_args) {
   pid_t pid = fork();
@@ -106,6 +114,10 @@ void handle_cmd(char *cmd, int cmd_len) {
   }
   if (strcmp(token, "type") == 0) {
     type_cmd(cmd + 5);
+    return;
+  }
+  if (strcmp(token, "pwd") == 0) {
+    pwd_cmd();
     return;
   }
   char path_buffer[1024];
