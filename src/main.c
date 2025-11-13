@@ -4,8 +4,11 @@
 int main(int argc, char *argv[]) {
   // Flush after every printf
   setbuf(stdout, NULL);
+  char buffer[128];
 
   printf("$ ");
+  scanf("%s", buffer);
+  printf("%s: command not found\n", buffer);
 
   return 0;
 }
