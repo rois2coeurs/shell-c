@@ -6,9 +6,11 @@ int main(int argc, char *argv[]) {
   setbuf(stdout, NULL);
   char buffer[128];
 
-  printf("$ ");
-  scanf("%s", buffer);
-  printf("%s: command not found\n", buffer);
+  while(1) {
+      printf("$ ");
+      scanf("%s", buffer);
+      printf("%s: command not found\n", buffer);
+  }
 
   return 0;
 }
