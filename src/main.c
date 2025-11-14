@@ -10,8 +10,8 @@
 
 #define BUFFER_SIZE 128
 #define BUILT_IN_CMD                                                           \
-  { "echo", "type", "exit", "pwd" }
-#define BUILD_IN_CMD_LEN 4
+  { "echo", "type", "exit", "pwd", "cd" }
+#define BUILD_IN_CMD_LEN 5
 
 int is_in_path(char *cmd, char *res_path) {
   char *raw_paths = getenv("PATH");
@@ -73,10 +73,15 @@ void type_cmd(char *cmd) {
 }
 
 void pwd_cmd() {
-    char cwd[PATH_MAX];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("%s\n", cwd);
-    }
+  char cwd[PATH_MAX];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    printf("%s\n", cwd);
+  }
+}
+
+void cd_cmd(char *path) {
+    if (chdir(path) == 0) return;
+    printf("cd: %s: No such file or directory\n", path);
 }
 
 void execute_external_file(char *executable_name, char *exe_path,
@@ -118,6 +123,10 @@ void handle_cmd(char *cmd, int cmd_len) {
   }
   if (strcmp(token, "pwd") == 0) {
     pwd_cmd();
+    return;
+  }
+  if (strcmp(token, "cd") == 0) {
+    cd_cmd(cmd+3);
     return;
   }
   char path_buffer[1024];
