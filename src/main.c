@@ -80,6 +80,7 @@ void pwd_cmd() {
 }
 
 void cd_cmd(char *path) {
+    if (strcmp(path, "~") == 0) path = getenv("HOME");
     if (chdir(path) == 0) return;
     printf("cd: %s: No such file or directory\n", path);
 }
