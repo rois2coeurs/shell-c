@@ -1,3 +1,4 @@
+#include "args.h"
 #include <dirent.h>
 #include <linux/limits.h>
 #include <stdio.h>
@@ -48,13 +49,21 @@ int is_in_path(char *cmd, char *res_path) {
 }
 
 void exit_cmd(char *exit_status) {
-  if (exit_status[0] == '0')
+  if (exit_status == NULL || exit_status[0] == '0')
     exit(EXIT_SUCCESS);
   else
     exit(EXIT_FAILURE);
 }
 
-void echo_cmd(char *message) { printf("%s\n", message); }
+void echo_cmd(char *args[]) {
+    int index = 0;
+    while (args[index] != NULL) {
+        printf("%s", args[index]);
+        index++;
+        if (args[index] != NULL) printf(" ");
+    }
+    printf("\n");
+}
 
 void type_cmd(char *cmd) {
   char *arr[] = BUILT_IN_CMD;
@@ -80,24 +89,16 @@ void pwd_cmd() {
 }
 
 void cd_cmd(char *path) {
-    if (strcmp(path, "~") == 0) path = getenv("HOME");
-    if (chdir(path) == 0) return;
-    printf("cd: %s: No such file or directory\n", path);
+  if (strcmp(path, "~") == 0)
+    path = getenv("HOME");
+  if (chdir(path) == 0)
+    return;
+  printf("cd: %s: No such file or directory\n", path);
 }
 
-void execute_external_file(char *executable_name, char *exe_path,
-                           char *raw_args) {
+void execute_external_file(char *exe_path, char **args) {
   pid_t pid = fork();
   if (pid == 0) {
-    char *token = strtok(raw_args, " ");
-    char *args[64];
-    args[0] = executable_name;
-    int args_len = 1;
-    while (token != NULL) {
-      args[args_len++] = token;
-      token = strtok(NULL, " ");
-    }
-    args[args_len] = NULL;
     execv(exe_path, args);
     exit(127);
   } else {
@@ -108,35 +109,25 @@ void execute_external_file(char *executable_name, char *exe_path,
 void handle_cmd(char *cmd, int cmd_len) {
   char cmd_cpy[cmd_len];
   memcpy(cmd_cpy, cmd, cmd_len);
-  char *token = strtok(cmd_cpy, " ");
-  if (strcmp(token, "exit") == 0) {
-    token = strtok(NULL, " ");
-    exit_cmd(token);
-    return;
-  }
-  if (strcmp(token, "echo") == 0) {
-    echo_cmd(cmd + 5);
-    return;
-  }
-  if (strcmp(token, "type") == 0) {
-    type_cmd(cmd + 5);
-    return;
-  }
-  if (strcmp(token, "pwd") == 0) {
-    pwd_cmd();
-    return;
-  }
-  if (strcmp(token, "cd") == 0) {
-    cd_cmd(cmd+3);
-    return;
-  }
   char path_buffer[1024];
-  if (is_in_path(token, path_buffer)) {
-    execute_external_file(token, path_buffer, cmd + strlen(token) + 1);
-    return;
-  }
+  char **args = parse_args(cmd);
 
-  printf("%s: command not found\n", cmd);
+  if (strcmp(args[0], "exit") == 0) {
+    exit_cmd(args[1]);
+  } else if (strcmp(args[0], "echo") == 0) {
+    echo_cmd(args+1);
+  } else if (strcmp(args[0], "type") == 0) {
+    type_cmd(args[1]);
+  } else if (strcmp(args[0], "pwd") == 0) {
+    pwd_cmd();
+  } else if (strcmp(args[0], "cd") == 0) {
+    cd_cmd(args[1]);
+  } else if (is_in_path(args[0], path_buffer)) {
+    execute_external_file(path_buffer, args);
+  } else {
+    printf("%s: command not found\n", cmd);
+  }
+  free_args(args);
 }
 
 int main(int argc, char *argv[]) {
