@@ -26,26 +26,7 @@ void handle_char(char ***args, int *args_count, char *buffer, int *buffer_index,
     }
 }
 
-void fill_default_delimitators(struct delimitor **delimitators) {
-    delimitators = malloc(sizeof(**delimitators) * 4);
-    struct delimitor *del1 = malloc(sizeof *del1);
-    del1->delim_char = ' ';
-    del1->is_in = FALSE;
-    struct delimitor *del2 = malloc(sizeof *del1);
-    del2->delim_char = '\'';
-    del2->is_in = FALSE;
-    struct delimitor *del3 = malloc(sizeof *del1);
-    del3->delim_char = '"';
-    del3->is_in = FALSE;
-    delimitators[0] = del1;
-    delimitators[1] = del2;
-    delimitators[2] = del3;
-    delimitators[3] = NULL;
-}
-
 char **parse_args(const char *input) {
-    struct delimitor **delimitors;
-    fill_default_delimitators(delimitors);
     int in_quote = FALSE;
     int in_space = FALSE;
     int in_double_quote = FALSE;
@@ -57,8 +38,11 @@ char **parse_args(const char *input) {
     int args_count = 0;
     while (index < input_len) {
         char current_char = input[index];
-        if (in_double_quote == FALSE && current_char == '\'' && input_len > index + 1 &&
-            input[index + 1] == '\'') {
+        if (current_char == '\\') {
+            index++;
+            buffer[buffer_index++] = input[index];
+        } else if (in_double_quote == FALSE && current_char == '\'' && input_len > index + 1 &&
+                   input[index + 1] == '\'') {
             index++;
         } else if (in_quote == FALSE && current_char == '"' && input_len > index + 1 &&
                    input[index + 1] == '"') {
@@ -79,7 +63,8 @@ char **parse_args(const char *input) {
         } else if (in_space == TRUE) {
             handle_char(&args, &args_count, buffer, &buffer_index, current_char, ' ', &in_space);
         } else if (in_double_quote == TRUE) {
-            handle_char(&args, &args_count, buffer, &buffer_index, current_char, '"', &in_double_quote);
+            handle_char(&args, &args_count, buffer, &buffer_index, current_char, '"',
+                        &in_double_quote);
         }
         index++;
     }
