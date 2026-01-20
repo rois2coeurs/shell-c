@@ -38,10 +38,7 @@ char **parse_args(const char *input) {
     int args_count = 0;
     while (index < input_len) {
         char current_char = input[index];
-        if (current_char == '\\') {
-            index++;
-            buffer[buffer_index++] = input[index];
-        } else if (in_double_quote == FALSE && current_char == '\'' && input_len > index + 1 &&
+        if (in_double_quote == FALSE && current_char == '\'' && input_len > index + 1 &&
                    input[index + 1] == '\'') {
             index++;
         } else if (in_quote == FALSE && current_char == '"' && input_len > index + 1 &&
@@ -50,7 +47,11 @@ char **parse_args(const char *input) {
         } else if (in_quote == FALSE && in_space == FALSE && in_double_quote == FALSE) {
             while (input[index] == ' ')
                 index++;
-            if (input[index] == '\'') {
+            if (current_char == '\\') {
+                index++;
+                buffer[buffer_index++] = input[index];
+                in_space = TRUE;
+            } else if (input[index] == '\'') {
                 in_quote = TRUE;
             } else if (input[index] == '"') {
                 in_double_quote = TRUE;
@@ -61,7 +62,12 @@ char **parse_args(const char *input) {
         } else if (in_quote == TRUE) {
             handle_char(&args, &args_count, buffer, &buffer_index, current_char, '\'', &in_quote);
         } else if (in_space == TRUE) {
-            handle_char(&args, &args_count, buffer, &buffer_index, current_char, ' ', &in_space);
+            if (current_char == '\\') {
+                index++;
+                buffer[buffer_index++] = input[index];
+            } else {
+                handle_char(&args, &args_count, buffer, &buffer_index, current_char, ' ', &in_space);
+            }
         } else if (in_double_quote == TRUE) {
             handle_char(&args, &args_count, buffer, &buffer_index, current_char, '"',
                         &in_double_quote);
